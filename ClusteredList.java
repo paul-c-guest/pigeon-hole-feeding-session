@@ -1,5 +1,6 @@
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -21,13 +22,14 @@ public class ClusteredList {
 		List<ClusteredFile> files = new ArrayList<>();
 
 		for (File file : input) {
-
 			try {
 				Metadata data = JpegMetadataReader.readMetadata(file);
 				ExifIFD0Directory exif = data.getFirstDirectoryOfType(ExifIFD0Directory.class);
 				Date date = exif.getDate(ExifIFD0Directory.TAG_DATETIME);
 
-				files.add(new ClusteredFile(file, date.toInstant().getEpochSecond()));
+				System.out.println(date.toInstant().toString());
+
+				files.add(new ClusteredFile(file, date.toInstant()));
 
 			} catch (JpegProcessingException e) {
 				continue;
@@ -36,7 +38,6 @@ public class ClusteredList {
 				continue;
 //				e.printStackTrace();
 			}
-
 		}
 
 		// ClusteredFile implements Comparable
@@ -46,20 +47,18 @@ public class ClusteredList {
 
 		// set boundary flags for appropriate entries
 		for (int i = 0; i < limit; i++) {
-
 			// final entry is always a boundary
 			if (i == limit - 1) {
 				files.get(i).clusterEnd = true;
 				continue;
 			}
 
-			long current = files.get(i).time;
-			long next = files.get(i + 1).time;
+			long current = files.get(i).time.getEpochSecond();
+			long next = files.get(i + 1).time.getEpochSecond();
 
 			if (next - current > FIVE_MINUTES) {
 				files.get(i).clusterEnd = true;
 			}
-
 		}
 
 		// convert list to 2d array
@@ -68,7 +67,6 @@ public class ClusteredList {
 		List<File> cluster = new ArrayList<File>();
 
 		for (int i = 0; i < files.size(); i++) {
-
 			ClusteredFile current = files.get(i);
 			cluster.add(current.file);
 
@@ -82,15 +80,15 @@ public class ClusteredList {
 	public List<File> getNext() {
 		return fileClusters.get(next());
 	}
-	
+
 	public List<File> getPrevious() {
 		return fileClusters.get(previous());
 	}
-	
+
 	public int size() {
 		return fileClusters.size();
 	}
-	
+
 	private int next() {
 		if (position == null) {
 			position = 0;
@@ -99,7 +97,7 @@ public class ClusteredList {
 		position = (position + 1) % size();
 		return position;
 	}
-	
+
 	private int previous() {
 		if (position == null) {
 			position = 0;
@@ -112,7 +110,7 @@ public class ClusteredList {
 		return position;
 	}
 
-	public void print() {
+	public void printStructure() {
 
 		for (List<File> cluster : fileClusters) {
 			for (File file : cluster) {
@@ -120,15 +118,14 @@ public class ClusteredList {
 			}
 			System.out.println();
 		}
-
 	}
 
 	private class ClusteredFile implements Comparable<ClusteredFile> {
 		File file;
-		Long time;
+		Instant time;
 		boolean clusterEnd = false;
 
-		public ClusteredFile(File file, Long time) {
+		public ClusteredFile(File file, Instant time) {
 			this.file = file;
 			this.time = time;
 		}
@@ -140,8 +137,7 @@ public class ClusteredList {
 
 		@Override
 		public int compareTo(ClusteredFile other) {
-			return (int) (this.time - other.time);
+			return (int) (this.time.getEpochSecond() - other.time.getEpochSecond());
 		}
 	}
-
 }

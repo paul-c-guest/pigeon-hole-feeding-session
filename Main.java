@@ -88,6 +88,18 @@ public class Main {
 			JLabel newImage = new JLabel(new ImageIcon(image));
 			newImage.setLayout(new FlowLayout(FlowLayout.CENTER));
 			
+			StringBuilder overlayText = new StringBuilder()
+					.append("image")
+					.append(index + 1)
+					.append("/")
+					.append(cluster.size() - 1)
+					.append(" : ")
+					.append(cluster.get(index).getName());
+			
+			JLabel textJLabel = new JLabel(overlayText.toString());
+//			filenameText.setForeground(getContrastingColour(colour));
+			newImage.add(textJLabel);
+			
 			Component compToRemove = currentImage;
 			currentImage = frame.add(newImage);
 			
