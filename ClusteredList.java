@@ -11,9 +11,9 @@ import com.drew.imaging.jpeg.JpegProcessingException;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.exif.ExifIFD0Directory;
 
-public class ClusteredList {
+class ClusteredList {
 
-	private List<List<File>> fileClusters;
+	private List<List<ClusteredFile>> fileClusters;
 	private Integer position = null;
 	private final static long FIVE_MINUTES = 300;
 
@@ -26,8 +26,8 @@ public class ClusteredList {
 				Metadata data = JpegMetadataReader.readMetadata(file);
 				ExifIFD0Directory exif = data.getFirstDirectoryOfType(ExifIFD0Directory.class);
 				Date date = exif.getDate(ExifIFD0Directory.TAG_DATETIME);
-
-				System.out.println(date.toInstant().toString());
+				
+				System.out.println(exif.getTags().toString());
 
 				files.add(new ClusteredFile(file, date.toInstant()));
 
@@ -62,26 +62,26 @@ public class ClusteredList {
 		}
 
 		// convert list to 2d array
-		fileClusters = new ArrayList<List<File>>();
+		fileClusters = new ArrayList<List<ClusteredFile>>();
 
-		List<File> cluster = new ArrayList<File>();
+		List<ClusteredFile> cluster = new ArrayList<ClusteredFile>();
 
 		for (int i = 0; i < files.size(); i++) {
 			ClusteredFile current = files.get(i);
-			cluster.add(current.file);
+			cluster.add(current);
 
 			if (current.clusterEnd) {
 				fileClusters.add(cluster);
-				cluster = new ArrayList<File>();
+				cluster = new ArrayList<ClusteredFile>();
 			}
 		}
 	}
 
-	public List<File> getNext() {
+	public List<ClusteredFile> getNext() {
 		return fileClusters.get(next());
 	}
 
-	public List<File> getPrevious() {
+	public List<ClusteredFile> getPrevious() {
 		return fileClusters.get(previous());
 	}
 
@@ -111,16 +111,45 @@ public class ClusteredList {
 	}
 
 	public void printStructure() {
-
-		for (List<File> cluster : fileClusters) {
-			for (File file : cluster) {
-				System.out.print(file.getName() + " ");
+		for (List<ClusteredFile> cluster : fileClusters) {
+			for (ClusteredFile file : cluster) {
+				System.out.print(file.file.getName() + " ");
 			}
 			System.out.println();
 		}
 	}
 
-	private class ClusteredFile implements Comparable<ClusteredFile> {
+	public String getClusterData() {
+		List<ClusteredFile> cluster = fileClusters.get(position);
+		String firstNumber = getNumberFromString(cluster.get(0).file.getName());
+		String firstTime = processTime(cluster.get(0).time.toString());
+		
+		StringBuilder sb = cluster.size() == 1 
+				? new StringBuilder()
+					.append("[ " + firstNumber + " at " + firstTime + " ]")
+				: new StringBuilder()
+				.append("[ start no. ")
+				.append(firstNumber)
+				.append(" at ")
+				.append(firstTime)
+				.append(" ] [ end no. ")
+				.append(getNumberFromString(cluster.get(cluster.size() - 1).file.getName()))
+				.append(" at ")
+				.append(processTime(cluster.get(cluster.size() - 1).time.toString()))
+				.append(" ]");
+		
+		return sb.toString();
+	}
+
+	private String getNumberFromString(String name) {
+		return name.replaceAll("[^0-9]+", "");
+	}
+
+	private String processTime(String time) {
+		return time.substring(11, 16);
+	}
+
+	class ClusteredFile implements Comparable<ClusteredFile> {
 		File file;
 		Instant time;
 		boolean clusterEnd = false;

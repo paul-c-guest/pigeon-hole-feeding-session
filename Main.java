@@ -26,7 +26,7 @@ public class Main {
 	private JFrame frame;
 	private Component currentImage;
 	private ClusteredList list;
-	private List<File> cluster;
+	private List<ClusteredList.ClusteredFile> cluster;
 
 	private int index = -1;
 
@@ -78,7 +78,7 @@ public class Main {
 	
 	private void changeImage() {
 		try {
-			BufferedImage buffered = ImageIO.read(cluster.get(index));
+			BufferedImage buffered = ImageIO.read(cluster.get(index).file);
 //			System.out.println(buffered.getHeight());
 			
 			// TODO do better scaling such as that in Feather.class
@@ -88,15 +88,7 @@ public class Main {
 			JLabel newImage = new JLabel(new ImageIcon(image));
 			newImage.setLayout(new FlowLayout(FlowLayout.CENTER));
 			
-			StringBuilder overlayText = new StringBuilder()
-					.append("image")
-					.append(index + 1)
-					.append("/")
-					.append(cluster.size() - 1)
-					.append(" : ")
-					.append(cluster.get(index).getName());
-			
-			JLabel textJLabel = new JLabel(overlayText.toString());
+			JLabel textJLabel = new JLabel("[ image " + (index + 1) + " of " + (cluster.size())+ " ] " + list.getClusterData());
 //			filenameText.setForeground(getContrastingColour(colour));
 			newImage.add(textJLabel);
 			
