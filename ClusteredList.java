@@ -20,14 +20,17 @@ class ClusteredList {
 	public ClusteredList(File[] input) {
 
 		List<ClusteredFile> files = new ArrayList<>();
+		Metadata data;
+		ExifIFD0Directory exif;
+		Date date;
 
 		for (File file : input) {
 			try {
-				Metadata data = JpegMetadataReader.readMetadata(file);
-				ExifIFD0Directory exif = data.getFirstDirectoryOfType(ExifIFD0Directory.class);
-				Date date = exif.getDate(ExifIFD0Directory.TAG_DATETIME);
+				data = JpegMetadataReader.readMetadata(file);
+				exif = data.getFirstDirectoryOfType(ExifIFD0Directory.class);
+				date = exif.getDate(ExifIFD0Directory.TAG_DATETIME);
 				
-				System.out.println(exif.getTags().toString());
+//				System.out.println(exif.getTags().toString());
 
 				files.add(new ClusteredFile(file, date.toInstant()));
 
@@ -128,11 +131,11 @@ class ClusteredList {
 				? new StringBuilder()
 					.append("[ " + firstNumber + " at " + firstTime + " ]")
 				: new StringBuilder()
-				.append("[ start no. ")
+				.append("[ first image ")
 				.append(firstNumber)
 				.append(" at ")
 				.append(firstTime)
-				.append(" ] [ end no. ")
+				.append(" ] [ last image ")
 				.append(getNumberFromString(cluster.get(cluster.size() - 1).file.getName()))
 				.append(" at ")
 				.append(processTime(cluster.get(cluster.size() - 1).time.toString()))
